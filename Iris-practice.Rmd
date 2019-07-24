@@ -1,0 +1,194 @@
+# Classifier using Neural Network
+
+```{r}
+library(tidyverse)
+```
+
+## Dataset
+
+Using the classic Iris Dataset
+
+```{r}
+df <- iris
+str(df)
+```
+
+```{r}
+head(df)
+```
+
+## Basic EDA
+
+Prepare three dataframes
+
+- df contains information for each flower
+- df_long contains information for each measurement
+- df_wide contains information for each part
+
+```{r}
+df_long <- df %>% 
+    gather(key = Part_Measure, value = Value, -Species) %>% #Gather columns
+    separate(col = Part_Measure, into = c("Part", "Measure"), sep = "\\.") #Break gathered column into two columns
+df_long$Measure <- as.factor(df_long$Measure)
+head(df_long)
+```
+
+```{r}
+df$FlowerID <- 1:nrow(df)
+df_wide <- df %>% 
+    gather(key = Part_Measure, value = Value, -Species, -FlowerID) %>% 
+    separate(col = Part_Measure, into = c("Part", "Measure"), sep = "\\.") %>% 
+    spread(key = Measure, value = Value)
+head(df_wide)
+```
+
+Q: How do measurements compare between species?
+
+```{r}
+ggplot(df_long, aes(x = Species, y = Value, col = Part)) +
+    geom_jitter()+
+    facet_grid(. ~ Measure)
+```
+Right away, we can see that the Setosa is distinct from the other two species, especially by Petal.
+The sepal measurements between the Versicolor and Virginica species appear similar, especially width
+Q: How does length and width of each part relate for each species?
+
+
+```{r}
+ggplot(df_wide, aes(x = Length, y = Width, col = Part)) +
+    geom_jitter() +
+    facet_grid(. ~ Species)
+```
+Q: How do the species compare to each other?
+```{r}
+ggplot(df_wide, aes(x=Length, y = Width, col = Species)) +
+    geom_jitter() +
+    facet_grid(. ~ Part)
+```
+Petal measurements are distinct between each species.
+Sepal widths of Virginica and Versicolor overlap but values of length vary.
+
+Wonderings:
+- can a simple neural network be trained to distinguish flower species?
+
+## Building the Model
+
+```{r}
+library(R6)
+```
+
+```{r}
+sigmoid <- function(x) {
+    1/(1+exp(-x))
+}
+
+d_sigmoid <- function(x) {
+    sigmoid(x)*(1-sigmoid(x))
+}
+
+softmax <- function(x) {
+    exps <- exp(x-max(x))
+    exps/sum(exps)
+}
+
+cross_entropy <- function(pred, real) {
+    n_samples <- length(real)
+    res <- pred - real
+    res/n_samples
+}
+```
+
+
+```{r}
+NeuralNetwork <- R6Class("NeuralNetwork",
+    public = list(
+        X = NULL, Y = NULL,
+        W1 = NULL, B1 = NULL,
+        W2 = NULL, B2 = NULL,
+        Lr = NULL, Neurons = NULL,
+        output = NULL,
+        initialize = function(data, real, neurons = 5, rate = 0.0001) {
+            self$X <- data
+            self$Neurons <- neurons
+            self$Lr <- rate
+            ip_dim = dim(data)[2]
+            op_dim = dim(real)[2]
+            
+            self$W1 <- matrix(rnorm(ip_dim*self$Neurons), ip_dim, self$Neurons)
+            self$W2 <- matrix(rnorm(self$Neurons*op_dim), self$Neurons, op_dim)
+            self$B1 <- matrix(0, 1, self$Neurons)
+            self$B2 <- matrix(0, 1, op_dim)
+            self$Y <- y
+        },
+        feedforward = function() {
+            
+        },
+        backprop = function() {
+            
+        },
+        predict = function() {
+            
+        }
+    )
+)
+```
+
+
+```{r}
+test_data <- data.matrix(df[,1:4])
+test_real <- df[,5, drop=FALSE]
+for (level in levels(test_real$Species)) {
+    boop[[level]] <- 1
+}
+```
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
