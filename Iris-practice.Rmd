@@ -9,7 +9,7 @@ library(tidyverse)
 Using the classic Iris Dataset
 
 ```{r}
-df <- iris
+df <- as_tibble(iris)
 str(df)
 ```
 
@@ -49,6 +49,7 @@ ggplot(df_long, aes(x = Species, y = Value, col = Part)) +
     geom_jitter()+
     facet_grid(. ~ Measure)
 ```
+
 Right away, we can see that the Setosa is distinct from the other two species, especially by Petal.
 The sepal measurements between the Versicolor and Virginica species appear similar, especially width
 Q: How does length and width of each part relate for each species?
@@ -59,12 +60,14 @@ ggplot(df_wide, aes(x = Length, y = Width, col = Part)) +
     geom_jitter() +
     facet_grid(. ~ Species)
 ```
+
 Q: How do the species compare to each other?
 ```{r}
 ggplot(df_wide, aes(x=Length, y = Width, col = Species)) +
     geom_jitter() +
     facet_grid(. ~ Part)
 ```
+
 Petal measurements are distinct between each species.
 Sepal widths of Virginica and Versicolor overlap but values of length vary.
 
@@ -76,6 +79,11 @@ Wonderings:
 ```{r}
 library(R6)
 ```
+
+First lets define the functions to be used in the neural network. I am using a sigmoid activation for the neurons, and softmax for the output layer. My cost function I decided to use cross entropy. 
+Decision was motivated by results found when searching online for activation functions for non-binary classification.
+
+http://neuralnetworksanddeeplearning.com/chap3.html?source=post_page---------------------------#introducing_the_cross-entropy_cost_function
 
 ```{r}
 sigmoid <- function(x) {
@@ -93,12 +101,14 @@ softmax <- function(x) {
 
 cross_entropy <- function(pred, real) {
     n_samples <- length(real)
-    res <- pred - real
-    res/n_samples
+    residuals <- pred - real
+    residuals/n_samples
 }
 ```
 
+Time to build the framework for a neural network object. 
 
+Because part of the intention of this workbook is to document and example my work/thought process, I will include the code I write to test functionality before presenting the final product. 
 ```{r}
 NeuralNetwork <- R6Class("NeuralNetwork",
     public = list(
@@ -118,7 +128,7 @@ NeuralNetwork <- R6Class("NeuralNetwork",
             self$W2 <- matrix(rnorm(self$Neurons*op_dim), self$Neurons, op_dim)
             self$B1 <- matrix(0, 1, self$Neurons)
             self$B2 <- matrix(0, 1, op_dim)
-            self$Y <- y
+            self$Y <- real
         },
         feedforward = function() {
             
@@ -133,16 +143,35 @@ NeuralNetwork <- R6Class("NeuralNetwork",
 )
 ```
 
+Prepare test input matrices. 
 
+- The final model will not be trained with the entire dataset. 
+- After proof of concept I will randomly divide the data the into testing and training.
 ```{r}
-test_data <- data.matrix(df[,1:4])
-test_real <- df[,5, drop=FALSE]
-for (level in levels(test_real$Species)) {
-    boop[[level]] <- 1
+test_data <- data.matrix(df[,c(1:4)])
+for (level in levels(df$Species)) {
+    df[[level]] <- ifelse(df$Species == level, 1, 0)
 }
+test_real <- data.matrix(df[,levels(df$Species)])
 ```
- 
 
+Making sure that I can load the data into a new neural network object.
+```{r}
+myNN <- NeuralNetwork$new(data = test_data, real = test_real)
+str(myNN)
+```
+Before writing the methods for feedforward, backpropogation, I want to practice writing out their functionality in R.
+
+Lets grab some variables
+```{r}
+B1 <- myNN$B1
+B2 <- myNN$B2
+W1 <- myNN$W1
+W2 <- myNN$W2
+X <- myNN$X
+Y <- myNN$Y
+```
+Step through a single iteration of feed forward
 
 
 
