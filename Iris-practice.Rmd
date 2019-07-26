@@ -116,6 +116,7 @@ NeuralNetwork <- R6Class("NeuralNetwork",
         W1 = NULL, B1 = NULL,
         W2 = NULL, B2 = NULL,
         Lr = NULL, Neurons = NULL,
+        A1= NULL,
         output = NULL,
         initialize = function(data, real, neurons = 5, rate = 0.0001) {
             self$X <- data
@@ -131,7 +132,7 @@ NeuralNetwork <- R6Class("NeuralNetwork",
             self$Y <- real
         },
         feedforward = function() {
-            
+            self$A1 <- "works"
         },
         backprop = function() {
             
@@ -164,16 +165,61 @@ Before writing the methods for feedforward, backpropogation, I want to practice 
 
 Lets grab some variables
 ```{r}
-B1 <- myNN$B1
-B2 <- myNN$B2
-W1 <- myNN$W1
-W2 <- myNN$W2
-X <- myNN$X
-Y <- myNN$Y
+#B1 <- myNN$B1
+#B2 <- myNN$B2
+B1 <- matrix(rnorm(5),1,5) #1x5 matrix
+B2 <- matrix(rnorm(3),1,3) #1x3 matrix
+W1 <- myNN$W1 #4x5 matrix
+W2 <- myNN$W2 #5x3 matrix
+X <- myNN$X #150x4 matrix
+Y <- myNN$Y #150x3 matrix
 ```
 Step through a single iteration of feed forward
 
+```{r}
+#For inputting 1 row of x
+feedforward <- function(x, w1, w2, b1, b2) {
+    z1 <- x %*% w1 + b1
+    h <- sigmoid(z1)
+    z2 <- h %*% w2 + b2
+    list(output = softmax(z2), h = h)
+}
+#For inputting all rows of X
+feedforward2 <- function(x, w1, w2, b1, b2) {
+    z1 <- sweep(x %*% w1,2,b1,FUN="+")  #Had to use sweep to add b1 to each row of x %*% w1
+    h <- t(apply(z1, 1, sigmoid))
+    z2 <- sweep(h %*% w2,2,b2,FUN="+")
+    list(output = t(apply(z2,1,softmax)))
+}
+```
 
+Testing to make sure that softmax is returning values that make sense.
+```{r}
+test_output <- feedforward2(X,W1,W2,B1,B2)
+head(test_output$output)
+```
+
+For determining selection verses actual
+```{r}
+predition <- as.matrix(apply(test_output$output, 1, which.max))
+actual <- as.matrix(apply(test_real), 1, which.max)
+```
+
+```{r}
+Z1 <- sweep(X %*% W1,2,B1,FUN="+")      #Z1 = 150x5 matrix
+A1 <- t(apply(Z1, 1, sigmoid))          #A1 = 150x5 matrix
+Z2 <- sweep(A1 %*% W2, 2, B2, FUN="+")  #Z2 = 150x3 matrix
+A2 <- t(apply(Z2,1,softmax))            #A2 = 150x3 matrix
+A1_derv <- d_sigmoid(A1)                #A1_derv = 150x5 matrix
+```
+
+Back propogation.
+```{r}
+Delta_A2 <- (A2 - test_real) #150x3 matrix
+Delta_A1 <- (Delta_A2 %*% t(W2)) %*% t(A1_derv)
+Errors_Outer <- t(t(Delta_A2) %*% A1)
+Errors_Hidden <- 
+```
 
 
 
