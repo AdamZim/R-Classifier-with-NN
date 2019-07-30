@@ -1,5 +1,3 @@
-Data Exploration
-================
 
 # Data Exploration
 

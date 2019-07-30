@@ -1,5 +1,3 @@
-NeuralNet
-================
 
 # Neural Net
 

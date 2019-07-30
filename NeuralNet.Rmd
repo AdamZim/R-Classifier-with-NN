@@ -1,5 +1,4 @@
 ---
-title: "NeuralNet"
 output: github_document
 ---
 
