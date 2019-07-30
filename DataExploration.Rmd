@@ -1,0 +1,89 @@
+---
+title: "Data Exploration"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Data Exploration
+
+Before building the classifier, it can be constructive to explore and visualize the data.
+
+```{r}
+library(tidyverse)
+```
+
+## Dataset
+
+Using the classic Iris Dataset
+
+```{r}
+df <- as_tibble(iris)
+str(df)
+```
+
+```{r}
+head(df)
+```
+
+## Basic EDA
+
+Prepare three dataframes
+
+- df contains information for each flower
+- df_long contains information for each measurement
+- df_wide contains information for each part
+
+```{r}
+df_long <- df %>% 
+    gather(key = Part_Measure, value = Value, -Species) %>% #Gather columns
+    separate(col = Part_Measure, into = c("Part", "Measure"), sep = "\\.") #Break gathered column into two columns
+df_long$Measure <- as.factor(df_long$Measure)
+head(df_long)
+```
+
+```{r}
+df$FlowerID <- 1:nrow(df)
+df_wide <- df %>% 
+    gather(key = Part_Measure, value = Value, -Species, -FlowerID) %>% 
+    separate(col = Part_Measure, into = c("Part", "Measure"), sep = "\\.") %>% 
+    spread(key = Measure, value = Value)
+head(df_wide)
+```
+
+Q: How do measurements compare between species?
+
+```{r}
+ggplot(df_long, aes(x = Species, y = Value, col = Part)) +
+    geom_jitter()+
+    facet_grid(. ~ Measure)
+```
+
+Right away, we can see that the Setosa is distinct from the other two species, especially by Petal.
+The sepal measurements between the Versicolor and Virginica species appear similar, especially for width
+Q: How does length and width of each part relate for each species?
+
+
+```{r}
+ggplot(df_wide, aes(x = Length, y = Width, col = Part)) +
+    geom_jitter() +
+    facet_grid(. ~ Species)
+```
+
+Q: How do the species compare to each other?
+```{r}
+ggplot(df_wide, aes(x=Length, y = Width, col = Species)) +
+    geom_jitter() +
+    facet_grid(. ~ Part)
+```
+
+Petal measurements are distinct between each species.
+Sepal widths of Virginica and Versicolor overlap but values of length vary.
+
+Wonderings:
+- can a simple neural network be trained to distinguish flower species?
+
+Answer:
+- Definitely, although mileage may vary.
